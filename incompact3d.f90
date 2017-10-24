@@ -45,7 +45,7 @@ USE derivZ
 
 implicit none
 
-integer :: code,nlock,i,j,k,ii,bcx,bcy,bcz,fh,ierror
+integer :: code,nlock,i,j,k,ii,bcx,bcy,bcz,fh,ierror,ifile
 real(mytype) :: x,y,z,tmp1
 double precision :: t1,t2
 character(len=20) :: filename
@@ -170,7 +170,7 @@ do itime=ifirst,ilast
 !      if (nrank==1) ux1(12,64,:)=-1.
      !if (nrank==0) ux(12,64,42)=1.5
      !print *,nrank,xstart(2),xend(2),xstart(3),xend(3)
-
+	
       call test_speed_min_max(ux1,uy1,uz1)
       if (iscalar==1) call test_scalar_min_max(phi1)
 
@@ -190,8 +190,16 @@ do itime=ifirst,ilast
       call VISU_PRE (pp3,ta1,tb1,di1,ta2,tb2,di2,&
            ta3,di3,nxmsize,nymsize,nzmsize,phG,ph2,ph3,uvisu)
    endif
-   ! ---------- Save box --------OMAR--------------------------
-	call saveBox (ux1,uy1,uz1,pp3,50,74,1,34,33,48)
+   ! ---------- Save box ----------------------------------
+!10 format('./boxSave/ux/ux',I5.5)
+!ifile=10+nrank
+!write(filename, 10) (itime)
+!write (*,*) filename
+!pause
+ !  call decomp_2d_write_subdomain(1,ux1,50,74,1,34,33,48,'ux_sub.dat') 
+   call saveSub (ux1,uy1,uz1,pp3,50,74,1,34,33,48)
+   call saveSubPressure (pp3,ta1,tb1,di1,ta2,tb2,di2,&
+           ta3,di3,nxmsize,nymsize,nzmsize,phG,ph2,ph3,uvisu,50,74,1,34,33,48)
    !-----------------------------------------------------------
 enddo
 
