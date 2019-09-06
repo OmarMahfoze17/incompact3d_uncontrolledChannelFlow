@@ -1,0 +1,38 @@
+#!/bin/bash
+#PBS -N R100_256_v9k3
+#PBS -l select=11:ncpus=24:mem=32gb
+#PBS -l walltime=48:00:00
+#PBS -m bea
+##PBS -M omar.mafoze.hpc@gmail.com
+cd $PBS_O_WORKDIR
+export NPROC=`qstat -f $PBS_JOBID | grep mppwidth | awk '{print $3}'`
+date
+read _ _ PBS_WALLTIME  <<< `qstat -f $PBS_JOBID | grep "Resource_List.walltime"`
+var1=$(echo $PBS_WALLTIME | cut -f1 -d:)
+var2=$(echo $PBS_WALLTIME | cut -f2 -d:)
+var3=$(echo $PBS_WALLTIME | cut -f3 -d:)
+echo "$((var1*3600+var2*60+var3))" > whatIsMyWallTime
+read _ _ PBS_NUMNODES  <<< `qstat -f $PBS_JOBID | grep "Resource_List.nodect"`
+###########################################################
+if [ -d "meanValTemp" ]; then
+    i=0
+    while :
+    do
+        i=$(($i+1))
+        if [ -d "meanVal_$i" ]; then
+           echo "meanVal_$i exists"
+        else
+            echo -e "\e[1;31m ./meanValTemp ===> meanVal_$i\e[0m" >> move_meanValTemp_LOG &
+            mv ./meanValTemp ./meanVal_$i
+        break
+            fi
+    done
+else
+    echo -e "\e[1;31m meanValTemp does not exist\e[0m" >> move_meanValTemp_LOG &
+fi
+###########################################################
+make clean
+make
+
+mpiexec \-n 256  ./incompact3d > INCOMPACT3D_log
+qsub run_short

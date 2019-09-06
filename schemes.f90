@@ -46,12 +46,12 @@ USE var
 implicit none
 
 integer  :: i,j,k
-real(mytype) :: fpi2
+real(mytype) :: fpi2, alpha2, diskc, diskm, dpis3, kppkc, kppkm, xxnu
 
-alfa1x= 2.
+alfa1x= 2._mytype
 af1x  =-(5./2.  )/dx
 bf1x  = (   2.  )/dx
-cf1x  = (1./2.  )/dx
+ cf1x  = (1./2.  )/dx
 df1x  = 0.
 alfa2x= 1./4.
 af2x  = (3./4.  )/dx
@@ -75,6 +75,10 @@ as2x  = (6./5.  )/dx2
 alsa3x= 2./11.
 as3x  = (12./11.)/dx2
 bs3x  = (3./44. )/dx2
+alsa4x= 2./11.
+as4x  = (12./11.)/dx2
+bs4x  = (3./44. )/dx2
+cs4x=0.
 alsanx= 11.
 asnx  = (13.    )/dx2
 bsnx  =-(27.    )/dx2
@@ -85,27 +89,62 @@ asmx  = (6./5.  )/dx2
 alsatx= 2./11.
 astx  = (12./11.)/dx2
 bstx  = (3./44. )/dx2
+alsattx = 2./11.
+asttx = (12./11.)/dx2
+bsttx = (3./44. )/dx2
+csttx = 0.
 
 !alsaix= 2./11.
 !asix  = (12./11.)/dx2
 !bsix  = (3./44. )/dx2
 !csix  = 0.
 !NUMERICAL DISSIPATION (see publications for help)
-fpi2=4.
-!      fpi2=(48./7)/(pi*pi)
-alsaix=(45.*fpi2*pi*pi-272.)/(2.*(45.*fpi2*pi*pi-208.))
-asix  =((6.-9.*alsaix)/4.)/dx2
-bsix  =((-3.+24*alsaix)/5.)/(4.*dx2)
-csix  =((2.-11.*alsaix)/20.)/(9.*dx2)
-!      stop
-!if (nrank==0) then
-!      write(*,*) '=== derxx ==='
-!      write(*,*) alsaix
-!      write(*,*) asix*dx2
-!      write(*,*) bsix*4*dx2
-!      write(*,*) csix*9*dx2
-!      write(*,*) '============='
+xxnu=1./3.
+dpis3=2*pi/3
+kppkc=pi*pi/xxnu+pi*pi
+kppkm=dpis3*dpis3*exp(-((pi-dpis3)/(0.3*pi-dpis3))**2)/xxnu+dpis3*dpis3
+diskc=kppkc
+diskm=kppkm
 
+!! 4 th Order ====================================
+!alpha2=(64.*diskm-27.*diskc-96.)/(64.*diskm-54.*diskc+48.)
+!asix=(54.*diskc-15.*diskc*diskm+12.)/(64.*diskm-54.*diskc+48.)
+!bsix=(192.*diskm-216.*diskc+24.*diskc*diskm-48.)/(64.*diskm-54.*diskc+48.)
+!=================================================
+
+!! 6 th Order ====================================
+alsaix=(405*diskc - 1280*diskm + 2736)/(810*diskc - 1280*diskm + 288)
+asix=-(4329*diskc - 256*diskm - 1120*diskc*diskm + 2288)/(3240*diskc - 5120*diskm + 1152)
+asix = asix / (dx2)
+bsix=(2115*diskc - 1792*diskm - 280*diskc*diskm + 1328)/(405*diskc - 640*diskm + 144)
+bsix = bsix / (4.*dx2)
+ csix=-(9*(855*diskc + 256*diskm - 160*diskc*diskm - 2288))/(8*(405*diskc - 640*diskm + 144))
+ csix = csix / (9.*dx2)  
+dsix=(198*diskc + 128*diskm - 40*diskc*diskm - 736)/(405*diskc - 640*diskm + 144)
+dsix = dsix / (16.*dx2) 
+!=================================================
+
+!csix=9.*(6.*diskc-diskc*diskm-12.)/(64.*diskm-54.*diskc+48.)
+!alsaix=alpha2
+!asix=asix/dx2
+!bsix=bsix/(4.*dx2)
+ !csix=csix/(9.*dx2)
+!fpi2=4.
+!fpi2t=4.
+!!      fpi2=(48./7)/(pi*pi)
+!alsaix=(45.*fpi2*pi*pi-272.)/(2.*(45.*fpi2*pi*pi-208.))
+!asix  =((6.-9.*alsaix)/4.)/dx2
+!bsix  =((-3.+24.*alsaix)/5.)/(4.*dx2)
+!csix  =((2.-11.*alsaix)/20.)/(9.*dx2)
+!      stop
+if (nrank==0) then
+      write(*,*) '=== derxx ==='
+      write(*,*) alsaix
+      write(*,*) asix*dx2
+      write(*,*) bsix*4*dx2
+      write(*,*) csix*9*dx2
+      write(*,*) '============='
+endif
 alfa1y= 2.
 af1y  =-(5./2.  )/dy
 bf1y  = (   2.  )/dy
@@ -133,6 +172,10 @@ as2y  = (6./5.  )/dy2
 alsa3y= 2./11.
 as3y  = (12./11.)/dy2
 bs3y  = (3./44. )/dy2
+alsa4y= 2./11.
+as4y  = (12./11.)/dy2
+bs4y  = (3./44. )/dy2
+cs4y=0.
 alsany= 11.
 asny  = (13.    )/dy2
 bsny  =-(27.    )/dy2
@@ -143,24 +186,54 @@ asmy  = (6./5.  )/dy2
 alsaty= 2./11.
 asty  = (12./11.)/dy2
 bsty  = (3./44. )/dy2
+alsatty = 2./11.
+astty = (12./11.)/dy2
+bstty = (3./44. )/dy2
+cstty = 0.
 
 !alsajy= 2./11.
 !asjy  = (12./11.)/dy2
 !bsjy  = (3./44. )/dy2
 !csjy   = 0.
 
-alsajy=(45.*fpi2*pi*pi-272.)/(2.*(45.*fpi2*pi*pi-208.))
-asjy  =((6.-9.*alsajy)/4.)/dy2
-bsjy  =((-3.+24*alsajy)/5.)/(4.*dy2)
-csjy  =((2.-11.*alsajy)/20.)/(9.*dy2)
-!if (nrank==0) then
-!      write(*,*) '=== deryy ==='
-!      write(*,*) alsajy
-!      write(*,*) asjy*dy2
-!      write(*,*) bsjy*4*dy2
-!      write(*,*) csjy*9*dy2
-!      write(*,*) '============='
-!endif
+diskc=kppkc
+diskm=kppkm
+alpha2=(64.*diskm-27.*diskc-96.)/(64.*diskm-54.*diskc+48.)
+asjy=(54.*diskc-15.*diskc*diskm+12.)/(64.*diskm-54.*diskc+48.)
+bsjy=(192.*diskm-216.*diskc+24.*diskc*diskm-48.)/(64.*diskm-54.*diskc+48.)
+csjy=9.*(6.*diskc-diskc*diskm-12.)/(64.*diskm-54.*diskc+48.)
+alsajy=alpha2
+asjy=asjy/dy2
+bsjy=bsjy/(4.*dy2)
+csjy=csjy/(9.*dy2)
+dsjy=0.0
+!! ================== 6 th Order =================
+
+!alsajy=(405*diskc - 1280*diskm + 2736)/(810*diskc - 1280*diskm + 288)
+!asjy=-(4329*diskc - 256*diskm - 1120*diskc*diskm + 2288)/(3240*diskc - 5120*diskm + 1152)
+!asjy = asjy / (dy2)
+!bsjy=(2115*diskc - 1792*diskm - 280*diskc*diskm + 1328)/(405*diskc - 640*diskm + 144)
+!bsjy = bsjy / (4.*dy2)
+! csjy=-(9*(855*diskc + 256*diskm - 160*diskc*diskm - 2288))/(8*(405*diskc - 640*diskm + 144))
+! csjy = csjy / (9.*dy2)  
+!dsjy=(198*diskc + 128*diskm - 40*diskc*diskm - 736)/(405*diskc - 640*diskm + 144)
+!dsjy = dsjy / (16.*dy2)  
+!=================================================
+
+!alsajy=(45.*fpi2*pi*pi-272.)/(2.*(45.*fpi2*pi*pi-208.))
+!asjy  =((6.-9.*alsajy)/4.)/dy2
+!bsjy  =((-3.+24.*alsajy)/5.)/(4.*dy2)
+!csjy  =((2.-11.*alsajy)/20.)/(9.*dy2)
+
+if (nrank==0) then
+      write(*,*) '=== deryy ==='
+      write(*,*) alsajy
+      write(*,*) asjy*dy2
+      write(*,*) bsjy*4*dy2
+      write(*,*) csjy*9*dy2
+      write(*,*) '============='
+endif
+
 alcaix6=9./62. 
 acix6=(63./62.)/dx
 bcix6=(17./62.)/3./dx 
@@ -482,6 +555,10 @@ enddo
    alsa3z= 2./11.
    as3z  = (12./11.)/dz2
    bs3z  = (3./44. )/dz2
+   alsa4z= 2./11.
+   as4z  = (12./11.)/dz2
+   bs4z  = (3./44. )/dz2
+   cs4z=0.
    alsanz= 11.
    asnz  = (13.    )/dz2
    bsnz  =-(27.    )/dz2
@@ -492,23 +569,52 @@ enddo
    alsatz= 2./11.
    astz  = (12./11.)/dz2
    bstz  = (3./44. )/dz2
-
+   alsattz = 2./11.
+   asttz = (12./11.)/dz2
+   bsttz = (3./44. )/dz2
+   csttz = 0.
 !   alsakz= 2./11.
 !   askz  = (12./11.)/dz2
 !   bskz  = (3./44. )/dz2
 !   cskz  = 0.
-         alsakz=(45.*fpi2*pi*pi-272.)/(2.*(45.*fpi2*pi*pi-208.))
-         askz  =((6.-9.*alsakz)/4.)/dz2
-         bskz  =((-3.+24*alsakz)/5.)/(4.*dz2)
-         cskz  =((2.-11.*alsakz)/20.)/(9.*dz2)
-!if (nrank==0) then
-!         write(*,*) '=== derzz ==='
-!         write(*,*) alsakz
-!         write(*,*) askz*dz2
-!         write(*,*) bskz*4*dz2
-!         write(*,*) cskz*9*dz2
-!         write(*,*) '============='
-!endif
+
+diskc=kppkc
+diskm=kppkm
+
+!alpha2=(64.*diskm-27.*diskc-96.)/(64.*diskm-54.*diskc+48.)
+!askz=(54.*diskc-15.*diskc*diskm+12.)/(64.*diskm-54.*diskc+48.)
+!bskz=(192.*diskm-216.*diskc+24.*diskc*diskm-48.)/(64.*diskm-54.*diskc+48.)
+!cskz=9.*(6.*diskc-diskc*diskm-12.)/(64.*diskm-54.*diskc+48.)
+!alsakz=alpha2
+!askz=askz/dz2
+!bskz=bskz/(4.*dz2)
+!cskz=cskz/(9.*dz2)
+
+!! ================== 6 th Order =================
+alsakz=(405*diskc - 1280*diskm + 2736)/(810*diskc - 1280*diskm + 288)
+askz=-(4329*diskc - 256*diskm - 1120*diskc*diskm + 2288)/(3240*diskc - 5120*diskm + 1152)
+askz = askz / (dz2)
+bskz=(2115*diskc - 1792*diskm - 280*diskc*diskm + 1328)/(405*diskc - 640*diskm + 144)
+bskz = bskz / (4.*dz2)
+ cskz=-(9*(855*diskc + 256*diskm - 160*diskc*diskm - 2288))/(8*(405*diskc - 640*diskm + 144))
+ cskz = cskz / (9.*dz2)  
+dskz=(198*diskc + 128*diskm - 40*diskc*diskm - 736)/(405*diskc - 640*diskm + 144)
+dskz = dskz / (16.*dz2)  
+!! ===============================================
+
+
+!         alsakz=(45.*fpi2*pi*pi-272.)/(2.*(45.*fpi2*pi*pi-208.))
+!         askz  =((6.-9.*alsakz)/4.)/dz2
+!         bskz  =((-3.+24.*alsakz)/5.)/(4.*dz2)
+!         cskz  =((2.-11.*alsakz)/20.)/(9.*dz2)
+if (nrank==0) then
+         write(*,*) '=== derzz ==='
+         write(*,*) alsakz
+         write(*,*) askz*dz2
+         write(*,*) bskz*4*dz2
+         write(*,*) cskz*9*dz2
+         write(*,*) '============='
+endif
 #endif
 
 if (nclx.eq.0) then

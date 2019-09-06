@@ -45,11 +45,13 @@ USE derivZ
 
 implicit none
 
-integer :: code,nlock,i,j,k,ii,bcx,bcy,bcz,fh,ierror,ifile
-real(mytype) :: x,y,z,tmp1
-double precision :: t1,t2
+integer :: code,nlock,i,j,k,ii,bcx,bcy,bcz,fh,ierror
+real(mytype) :: x,y,z,tmp1,ux_max
+real(8) :: time1,time2,tstart,trank,tranksum,ttotal,tremaining,telapsed
+real(8) :: t2,t1,myWallTime
 character(len=20) :: filename
 
+logical :: exist
 TYPE(DECOMP_INFO) :: phG,ph1,ph2,ph3,ph4
 
 CALL MPI_INIT(code)
@@ -58,6 +60,15 @@ call decomp_2d_init(nx,ny,nz,p_row,p_col)
 call init_coarser_mesh_statS(nstat,nstat,nstat,.true.)
 call init_coarser_mesh_statV(nvisu,nvisu,nvisu,.true.)
 call parameter()
+! ***************** OMAR **********************
+myWallTime=24*3600
+inquire(file='./whatIsMyWallTime', exist=exist)
+if (exist) then
+    open(10,file='./whatIsMyWallTime',status='unknown',form='formatted')
+    read (10,*) myWallTime
+    if (nrank==0)        print *,'My Wall Time is ', myWallTime
+    close (10)
+endif
 
 call init_variables
 
@@ -89,6 +100,8 @@ call decomp_info_init(nxm,nym,nzm,phG)
 if (ilit==0) call init(ux1,uy1,uz1,ep1,phi1,gx1,gy1,gz1,phis1,hx1,hy1,hz1,phiss1)  
 if (ilit==1) call restart(ux1,uy1,uz1,ep1,pp3,phi1,gx1,gy1,gz1,&
         px1,py1,pz1,phis1,hx1,hy1,hz1,phiss1,phG,0)
+call restart(ux1,uy1,uz1,ep1,pp3,phi1,gx1,gy1,gz1,&
+        px1,py1,pz1,phis1,hx1,hy1,hz1,phiss1,phG,1)
 call test_speed_min_max(ux1,uy1,uz1)
 if (iscalar==1) call test_scalar_min_max(phi1)
 
@@ -98,7 +111,7 @@ uumean=0.;vvmean=0.;wwmean=0.
 uvmean=0.;uwmean=0.;vwmean=0.
 phimean=0.;phiphimean=0.
 
-t1 = MPI_WTIME()
+
 
 !div: nx ny nz --> nxm ny nz --> nxm nym nz --> nxm nym nzm
 call decomp_info_init(nxm, nym, nzm, ph1)
@@ -107,11 +120,14 @@ call decomp_info_init(nxm, ny, nz, ph4)
 !gradp: nxm nym nzm -> nxm nym nz --> nxm ny nz --> nx ny nz
 call decomp_info_init(nxm, ny, nz, ph2)  
 call decomp_info_init(nxm, nym, nz, ph3) 
-
-
+tstart=0.;t1=0.;trank=0.;tranksum=0.;ttotal=0.
+tstart=MPI_WTIME()
+call filter(0.28_mytype)
 do itime=ifirst,ilast
    t=(itime-1)*dt
+   t1=MPI_WTIME()
    if (nrank==0) then
+      print *, '==========================================='
       write(*,1001) itime,t
 1001  format('Time step =',i7,', Time unit =',F9.3)
    endif
@@ -170,50 +186,80 @@ do itime=ifirst,ilast
 !      if (nrank==1) ux1(12,64,:)=-1.
      !if (nrank==0) ux(12,64,42)=1.5
      !print *,nrank,xstart(2),xend(2),xstart(3),xend(3)
-	
+
       call test_speed_min_max(ux1,uy1,uz1)
       if (iscalar==1) call test_scalar_min_max(phi1)
+      call MPI_REDUCE(maxval(ux1),ux_max,1,real_type,MPI_MAX,0,MPI_COMM_WORLD,code)
+      if (nrank==0) then
+      if (ux_max >= 100 .or. isnan(sum(ux1))) then
+      call writePara(1,0,1,(itime/isave)*isave,0.9*dt)
+      print *, 'NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN'
+      stop  'NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN'
+      goto 100
+   endif
+   endif
+
 
    enddo
 
-   call STATISTIC(ux1,uy1,uz1,phi1,ta1,umean,vmean,wmean,phimean,uumean,vvmean,wwmean,&
-        uvmean,uwmean,vwmean,phiphimean,tmean)
-
-	
-   if (mod(itime,isave)==0) call restart(ux1,uy1,uz1,ep1,pp3,phi1,gx1,gy1,gz1,&
+   if (itime*dt .gt. 180) then
+        call STATISTIC(ux1,uy1,uz1,phi1,ta1,umean,vmean,wmean,phimean,uumean,vvmean,wwmean,&
+            uvmean,uwmean,vwmean,phiphimean,tmean)
+   endif
+   if (mod(itime,isave)==0) then 
+      call restart(ux1,uy1,uz1,ep1,pp3,phi1,gx1,gy1,gz1,&
         px1,py1,pz1,phis1,hx1,hy1,hz1,phiss1,phG,1)
+      if (nrank==0) call writePara(1,0,0,itime,dt)
+   endif
      
    if (mod(itime,imodulo)==0) then
       call VISU_INSTA(ux1,uy1,uz1,phi1,ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1,&
            ta2,tb2,tc2,td2,te2,tf2,tg2,th2,ti2,tj2,di2,&
            ta3,tb3,tc3,td3,te3,tf3,tg3,th3,ti3,di3,phG,uvisu)
-      call VISU_PRE (pp3,ta1,tb1,di1,ta2,tb2,di2,&
-           ta3,di3,nxmsize,nymsize,nzmsize,phG,ph2,ph3,uvisu)
+
    endif
-   ! ---------- Save box ----------------------------------
-!10 format('./boxSave/ux/ux',I5.5)
-!ifile=10+nrank
-!write(filename, 10) (itime)
-!write (*,*) filename
-!pause
- !  call decomp_2d_write_subdomain(1,ux1,50,74,1,34,33,48,'ux_sub.dat') 
-   call saveSub (ux1,uy1,uz1,pp3,50,74,1,34,33,48)
-   call saveSubPressure (pp3,ta1,tb1,di1,ta2,tb2,di2,&
-           ta3,di3,nxmsize,nymsize,nzmsize,phG,ph2,ph3,uvisu,50,74,1,34,33,48)
-   !-----------------------------------------------------------
+   
+   
+   trank=MPI_WTIME()
+   if (nrank==0) print *,'Time per this time step (s):',real(trank-t1)
+     tremaining  = (((trank-tstart)/itime)*(ilast-itime))/3600.
+     telapsed = (t1-tstart)/3600.
+
+     if (nrank==0) then
+        write(*,"(' Remaining time:',I8,' h ',I2,' min')") int(tremaining),int((tremaining-int(tremaining))*60.)
+        write(*,"(' Elapsed time:  ',I8,' h ',I2,' min')") int(telapsed),int((telapsed-int(telapsed))*60.)
+        print *,'telapsed  ',telapsed
+        print *, '===================================================='
+     endif
+
+     if (telapsed*3600 > (myWallTime-600)) then
+        call restart(ux1,uy1,uz1,ep1,pp3,phi1,gx1,gy1,gz1,&
+        px1,py1,pz1,phis1,hx1,hy1,hz1,phiss1,phG,1)        
+        if (itime*dt .gt. 180) then
+        call STATISTIC(ux1,uy1,uz1,phi1,ta1,umean,vmean,wmean,phimean,uumean,vvmean,wwmean,&
+            uvmean,uwmean,vwmean,phiphimean,tmean)
+        endif
+        if (nrank==0) call writePara(1,0,0,itime,dt)
+        goto 100
+     endif
+
+
+
 enddo
 
-t2=MPI_WTIME()-t1
+100 t2=MPI_WTIME()-t1
 call MPI_ALLREDUCE(t2,t1,1,MPI_REAL8,MPI_SUM, &
                    MPI_COMM_WORLD,code)
 if (nrank==0) print *,'time per time_step: ', &
-     t1/float(nproc)/(ilast-ifirst+1),' seconds'
+     (trank-tstart)/(ilast-ifirst+1),' seconds'
 if (nrank==0) print *,'simulation with nx*ny*nz=',nx,ny,nz,'mesh nodes'
 if (nrank==0) print *,'Mapping p_row*p_col=',p_row,p_col
-IF (NRANK .EQ.0) CALL visu_paraview()
+
 
 !call decomp_2d_poisson_finalize
 call decomp_2d_finalize
 CALL MPI_FINALIZE(code)
+contains
+#include "writePara.f90"
 
 end PROGRAM incompact3d

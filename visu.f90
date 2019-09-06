@@ -126,7 +126,7 @@ call decomp_2d_write_one(1,uvisu,filename,2)
 !           1,uy1,filename)
 uvisu=0.
 call fine_to_coarseV(1,uz1,uvisu)
-995 format('uz',I3.3)
+995 format('uz_',I3.3)
       write(filename, 995) itime/imodulo
 call decomp_2d_write_one(1,uvisu,filename,2)
 !call decomp_2d_write_one(nx_global,ny_global,nz_global,&
@@ -154,9 +154,8 @@ end subroutine VISU_INSTA
 
 !############################################################################
 !
-subroutine STATISTIC(ux1,uy1,uz1,phi1,ta1,umean,vmean,wmean,phimean,uumean,vvmean,wwmean,&
-     uvmean,uwmean,vwmean,phiphimean,tmean)
-!
+subroutine STATISTIC(ux1,uy1,uz1,phi1,ta1,umean,vmean,wmean,phimean,uumean,vvmean,wwmean,&  
+            uvmean,uwmean,vwmean,phiphimean,tmean) ! OMAR
 !############################################################################
 
 USE param
@@ -165,11 +164,17 @@ USE decomp_2d
 USE decomp_2d_io
 
 implicit none
+integer :: nxmsize,nymsize,nzmsize   ! OMAR
+TYPE(DECOMP_INFO) :: phG,ph2,ph3 ! OMAR
 
 real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,phi1
 real(mytype),dimension(xszS(1),xszS(2),xszS(3)) :: umean,vmean,wmean,uumean,vvmean,wwmean,uvmean,uwmean,vwmean,tmean
 real(mytype),dimension(xszS(1),xszS(2),xszS(3)) :: phimean, phiphimean
 real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ta1
+
+
+
+
 
 !umean=ux1
 call fine_to_coarseS(1,ux1,tmean)
@@ -254,8 +259,8 @@ end subroutine STATISTIC
 
 !############################################################################
 !
-subroutine VISU_PRE (pp3,ta1,tb1,di1,ta2,tb2,di2,&
-     ta3,di3,nxmsize,nymsize,nzmsize,phG,ph2,ph3,uvisu)
+subroutine VISU_PRE (pmean,ta1,tb1,di1,ta2,tb2,di2,&
+     ta3,di3,nxmsize,nymsize,nzmsize,phG,ph2,ph3,uvisu) ! OMAR
 !
 !############################################################################
 
@@ -270,7 +275,7 @@ integer :: nxmsize,nymsize,nzmsize
 TYPE(DECOMP_INFO) :: phG,ph2,ph3
 real(mytype),dimension(xszV(1),xszV(2),xszV(3)) :: uvisu 
 
-real(mytype),dimension(ph3%zst(1):ph3%zen(1),ph3%zst(2):ph3%zen(2),nzmsize) :: pp3 
+real(mytype),dimension(ph3%zst(1):ph3%zen(1),ph3%zst(2):ph3%zen(2),nzmsize) :: pmean 
 !Z PENCILS NXM NYM NZM-->NXM NYM NZ
 real(mytype),dimension(ph3%zst(1):ph3%zen(1),ph3%zst(2):ph3%zen(2),zsize(3)) :: ta3,di3
 !Y PENCILS NXM NYM NZ -->NXM NY NZ
@@ -286,7 +291,7 @@ character(len=20) nfichier,nfichier1
 character(len=20) :: filename
 
 !WORK Z-PENCILS
-call interiz6(ta3,pp3,di3,sz,cifip6z,cisip6z,ciwip6z,cifz6,cisz6,ciwz6,&
+call interiz6(ta3,pmean,di3,sz,cifip6z,cisip6z,ciwip6z,cifz6,cisz6,ciwz6,&
      (ph3%zen(1)-ph3%zst(1)+1),(ph3%zen(2)-ph3%zst(2)+1),nzmsize,zsize(3),1)
 !WORK Y-PENCILS
 call transpose_z_to_y(ta3,ta2,ph3) !nxm nym nz
@@ -302,174 +307,8 @@ uvisu=0.
 call fine_to_coarseV(1,tb1,uvisu)
 990 format('pp',I3.3)
       write(filename, 990) itime/imodulo
-call decomp_2d_write_one(1,uvisu,filename,2)
+call decomp_2d_write_one(1,uvisu,'pmean.dat',2)
 !call decomp_2d_write_one(nx_global,ny_global,nz_global,&
 !           1,tb1,filename)
 
 end subroutine VISU_PRE
-
-!############################################################################
-!
-subroutine visu_paraview()
-!
-!############################################################################
-USE param
-
-USE variables
-  implicit none
-  integer(4) :: nfiles, icrfile, file1, filen, ifile, dig1, dig2, dig3, dig4
-  real(4), allocatable :: y1(:),y3(:)
-  integer(4) :: i, j, k, num, aig, ii, nfil
-
-!IF THE DATA ARE STORED WITH 3 DIGITS, IE UX001,UX002,ETC.
-  character(3) :: chits
-!IF THE DATA ARE STORED WITH 4 DIGITS, IE UX0001,UX0002,ETC.
-!  character(4) :: chits
-
-  !write (*,*) 'nx, ny, nz   - Incompact3D'
-  !read (*,*) nx, ny, nz
-  !write (*,*) 'xlx, yly, zlz   - Incompact3D'
-  !read (*,*) xlx, yly, zlz
-  !write (*,*) 'nclx, ncly, nclz   - Incompact3D'
- ! read (*,*) nclx, ncly, nclz
-  !write (*,*) 'n files, first file, last file'
-  !read (*,*) nfiles,file1, filen
-  !write (*,*) 'Stretching in the y direction (Y=1/N=0)?'
-  !read (*,*) istret
- 
-  
-  nfiles=ilast/imodulo
-  file1=1
-  filen=nfiles
-
-  istret=1
-
-  if (nclx==0) dx=xlx/nx
- if (nclx==1 .or. nclx==2) dx=xlx/(nx-1.)
-  if (ncly==0) dy=yly/ny
-  if (ncly==1.or.ncly==2) dy=yly/(ny-1.)
- if (nclz==0) dz=zlz/nz
-  if (nclz==1.or.nclz==2) dz=zlz/(nz-1.)
-  dt=1.
-
-  allocate(y1(nx))
-  allocate(y3(nz))
-  do i=1,nx
-     y1(i)=(i-1)*dx
-  enddo
-  if (istret==1) then
-     print *,'We need to read the yp.dat file'
-     open(12,file='yp.dat',form='formatted',status='unknown')
-     do j=1,ny
-        read(12,*) yp(j)
-     enddo
-     close(12)
-  else
-     do j=1,ny
-        yp(j)=(j-1)*dy
-     enddo
-  endif
-  do k=1,nz
-     y3(k)=(k-1)*dz
-  enddo
-
-
-  nfil=41
-  open(nfil,file='visu.xdmf')
-
-  write(nfil,'(A22)')'<?xml version="1.0" ?>'
-  write(nfil,*)'<!DOCTYPE Xdmf SYSTEM "Xdmf.dtd" []>'
-  write(nfil,*)'<Xdmf xmlns:xi="http://www.w3.org/2001/XInclude" Version="2.0">'
-  write(nfil,*)'<Domain>'
-  write(nfil,*)'    <Topology name="topo" TopologyType="3DRectMesh"'
-  write(nfil,*)'        Dimensions="',nz,ny,nx,'">'
-  write(nfil,*)'    </Topology>'
-  write(nfil,*)'    <Geometry name="geo" Type="VXVYVZ">'
-  write(nfil,*)'    <DataItem Dimensions="',nx,'" NumberType="Float" Precision="4" Format="XML">'
-  write(nfil,*)'    ',y1(:) 
-  write(nfil,*)'    </DataItem>'
-  write(nfil,*)'    <DataItem Dimensions="',ny,'" NumberType="Float" Precision="4" Format="XML">'
-  write(nfil,*)'    ',yp(:) 
-  write(nfil,*)'    </DataItem>'
-  write(nfil,*)'    <DataItem Dimensions="',nz,'" NumberType="Float" Precision="4" Format="XML">'
-  write(nfil,*)'    ',y3(:) 
-  write(nfil,*)'    </DataItem>'
-  write(nfil,*)'    </Geometry>'
-  write(nfil,'(/)')
-  write(nfil,*)'    <Grid Name="TimeSeries" GridType="Collection" CollectionType="Temporal">'
-  write(nfil,*)'        <Time TimeType="HyperSlab">'
-  write(nfil,*)'            <DataItem Format="XML" NumberType="Float" Dimensions="3">'
-  write(nfil,*)'           <!--Start, Stride, Count-->'
-  write(nfil,*)'            0.0',dt
-  write(nfil,*)'            </DataItem>'
-  write(nfil,*)'        </Time>'
-
-  do ifile = file1, filen
-
-!IF THE DATA ARE STORED WITH 4 DIGITS, IE UX0001,UX0002,ETC.
-  !   dig1 =   ifile/1000 + 48
-  !   dig2 = ( ifile - 1000*( ifile/1000 ) )/100 + 48
-  !   dig3 = ( ifile - 100*( ifile/100 ) )/10 + 48
-  !   dig4 = ( ifile - 10*( ifile/10 ) )/1 + 48
-  !   chits(1:4) = char(dig1)//char(dig2)//char(dig3)//char(dig4)    
-
-!IF THE DATA ARE STORED WITH 3 DIGITS, IE UX001,UX002,ETC.
-    dig1 =   ifile/100 + 48
-    dig2 = ( ifile - 100*( ifile/100 ) )/10 + 48
-    dig3 = ( ifile - 10*( ifile/10 ) )/1 + 48
-    chits(1:3) = char(dig1)//char(dig2)//char(dig3)
-
-     write(*,*) ifile, 'file'//chits
-
-     write(nfil,'(/)')
-     write(nfil,*)'        <Grid Name="'//chits//'" GridType="Uniform">'
-     write(nfil,*)'            <Topology Reference="/Xdmf/Domain/Topology[1]"/>'
-     write(nfil,*)'            <Geometry Reference="/Xdmf/Domain/Geometry[1]"/>'
-!SINGLE PRECISION-->Precision=4
-!DOUBLE PRECISION-->Precision=8
-     write(nfil,*)'            <Attribute Name="ux" Center="Node">'
-     write(nfil,*)'               <DataItem Format="Binary" '
-     write(nfil,*)'                DataType="Float" Precision="8" Endian="little"'
-     write(nfil,*)'                Dimensions="',nz,ny,nx,'">'
-     write(nfil,*)'                  ux'//chits
-     write(nfil,*)'               </DataItem>'
-     write(nfil,*)'            </Attribute>'
-
-!it is possible to add as much field as you want for example uy
-
-    write(nfil,*)'            <Attribute Name="uy" Center="Node">'
-    write(nfil,*)'               <DataItem Format="Binary" '
-    write(nfil,*)'                DataType="Float" Precision="8" Endian="little"'
-    write(nfil,*)'                Dimensions="',nz,ny,nx,'">'
-    write(nfil,*)'                  uy'//chits
-    write(nfil,*)'               </DataItem>'
-    write(nfil,*)'            </Attribute>'
-
-    write(nfil,*)'            <Attribute Name="uz" Center="Node">'
-    write(nfil,*)'               <DataItem Format="Binary" '
-    write(nfil,*)'                DataType="Float" Precision="8" Endian="little"'
-    write(nfil,*)'                Dimensions="',nz,ny,nx,'">'
-    write(nfil,*)'                  uz'//chits
-    write(nfil,*)'               </DataItem>'
-    write(nfil,*)'            </Attribute>'
-
-
-    write(nfil,*)'            <Attribute Name="vort" Center="Node">'
-    write(nfil,*)'               <DataItem Format="Binary" '
-    write(nfil,*)'                DataType="Float" Precision="8" Endian="little"'
-    write(nfil,*)'                Dimensions="',nz,ny,nx,'">'
-    write(nfil,*)'                  vort'//chits
-    write(nfil,*)'               </DataItem>'
-    write(nfil,*)'            </Attribute>'
-
-     write(nfil,*)'        </Grid>'
-
-  enddo
-  write(nfil,'(/)')
-  write(nfil,*)'    </Grid>'
-  write(nfil,*)'</Domain>'
-  write(nfil,'(A7)')'</Xdmf>'
-  close(nfil)
-
-end subroutine visu_paraview
-

@@ -44,7 +44,7 @@ USE decomp_2d
 
 implicit none
 
-real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1
+real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,Tx1,Ty1,Tz1
 real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
 real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: ux2,uy2,uz2 
 real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: ta2,tb2,tc2,td2,te2,tf2,tg2,th2,ti2,tj2,di2
@@ -158,6 +158,7 @@ else !SKEW!
    enddo
 endif
 !ALL THE CONVECTIVE TERMS ARE IN TA3, TB3 and TC3
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 td3(:,:,:)=ta3(:,:,:)
 te3(:,:,:)=tb3(:,:,:)
@@ -249,18 +250,23 @@ call derxx (tf1,uz1,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1)
 ta1(:,:,:)=ta1(:,:,:)+td1(:,:,:)
 tb1(:,:,:)=tb1(:,:,:)+te1(:,:,:)
 tc1(:,:,:)=tc1(:,:,:)+tf1(:,:,:)
-
+!if (itime*dt .lt. 180) then
+!if (nrank==1) print *,'------------------------------'
 !if (nrank==1) print *,'WARNING rotating channel',itime
+!if (nrank==1) print *,'------------------------------'
 !tg1(:,:,:)=tg1(:,:,:)-2./18.*uy1(:,:,:)
 !th1(:,:,:)=th1(:,:,:)-2./18.*ux1(:,:,:)
-
-
+!endif
+!!!
 !FINAL SUM: DIFF TERMS + CONV TERMS
 ta1(:,:,:)=xnu*ta1(:,:,:)-tg1(:,:,:)
 tb1(:,:,:)=xnu*tb1(:,:,:)-th1(:,:,:)
 tc1(:,:,:)=xnu*tc1(:,:,:)-ti1(:,:,:)
 
 
+!ta1(:,:,:)=ta1(:,:,:)+Tx1(:,:,:)
+!tb1(:,:,:)=tb1(:,:,:)+Ty1(:,:,:)
+!tc1(:,:,:)=tc1(:,:,:)+Tz1(:,:,:)
 end subroutine convdiff
 
 

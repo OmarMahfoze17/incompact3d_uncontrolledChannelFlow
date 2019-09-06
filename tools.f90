@@ -128,6 +128,10 @@ call MPI_REDUCE(uzmin,uzmin1,1,real_type,MPI_MIN,0,MPI_COMM_WORLD,code)
 if (nrank==0) then
    print *,'U,V,W max=',uxmax1,uymax1,uzmax1
    print *,'U,V,W min=',uxmin1,uymin1,uzmin1
+   !if (uxmax1 .gt. 25.0 .or. uxmin1 .lt. -25.0) then
+      ! print *, 'NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN'
+      !stop  'NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN'
+   !endif
 endif
 
 
@@ -165,6 +169,7 @@ logical, dimension(2) :: dummy_periods
 if (iscalar==0) then
    if (nscheme.ne.4) then
       if (irestart==1) then !write
+
          call MPI_FILE_OPEN(MPI_COMM_WORLD, 'sauve.dat', &
               MPI_MODE_CREATE+MPI_MODE_WRONLY, MPI_INFO_NULL, &
               fh, ierror)
@@ -183,7 +188,8 @@ if (iscalar==0) then
          call decomp_2d_write_var(fh,disp,1,pp3,phG)
          call MPI_FILE_CLOSE(fh,ierror)
       else
-         if (nrank==0) print *,'RESTART'
+
+         if (nrank==0) print *,'RESTART 111111111111111111111111'
          call MPI_FILE_OPEN(MPI_COMM_WORLD, 'sauve.dat', &
               MPI_MODE_RDONLY, MPI_INFO_NULL, &
               fh, ierror)
@@ -223,7 +229,7 @@ if (iscalar==0) then
          call decomp_2d_write_var(fh,disp,1,pp3,phG)
          call MPI_FILE_CLOSE(fh,ierror)
       else
-         if (nrank==0) print *,'RESTART'
+         if (nrank==0) print *,'RESTART222222222222222222'
          call MPI_FILE_OPEN(MPI_COMM_WORLD, 'sauve.dat', &
               MPI_MODE_RDONLY, MPI_INFO_NULL, &
               fh, ierror)
@@ -267,7 +273,7 @@ if (nscheme.ne.4) then
          call decomp_2d_write_var(fh,disp,1,phis1)
          call MPI_FILE_CLOSE(fh,ierror)
       else
-         if (nrank==0) print *,'RESTART'
+         if (nrank==0) print *,'RESTART3333333333333333333333333'
          call MPI_FILE_OPEN(MPI_COMM_WORLD, 'sauve.dat', &
               MPI_MODE_RDONLY, MPI_INFO_NULL, &
               fh, ierror)
@@ -312,7 +318,7 @@ if (nscheme.ne.4) then
          call decomp_2d_write_var(fh,disp,1,phiss1)
          call MPI_FILE_CLOSE(fh,ierror)
       else
-         if (nrank==0) print *,'RESTART'
+         if (nrank==0) print *,'RESTART44444444444444444444444'
          call MPI_FILE_OPEN(MPI_COMM_WORLD, 'sauve.dat', &
               MPI_MODE_RDONLY, MPI_INFO_NULL, &
               fh, ierror)

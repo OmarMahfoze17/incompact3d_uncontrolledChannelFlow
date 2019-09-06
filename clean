@@ -1,0 +1,7 @@
+#!/bin/sh
+rm -rf meanVal_*
+rm *mean.dat
+rm sauve.dat 
+make clean
+rm IN*
+

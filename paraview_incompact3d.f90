@@ -13,17 +13,21 @@ program visu_paraview
 !IF THE DATA ARE STORED WITH 4 DIGITS, IE UX0001,UX0002,ETC.
 !  character(4) :: chits
 
-  write (*,*) 'nx, ny, nz   - Incompact3D'
-  read (*,*) nx, ny, nz
-  write (*,*) 'xlx, yly, zlz   - Incompact3D'
-  read (*,*) xlx, yly, zlz
-  write (*,*) 'nclx, ncly, nclz   - Incompact3D'
-  read (*,*) nclx, ncly, nclz
-  write (*,*) 'n files, first file, last file'
-  read (*,*) nfiles,file1, filen
-  write (*,*) 'Stretching in the y direction (Y=1/N=0)?'
-  read (*,*) istret
-
+  
+  nx=128
+  ny=129
+  nz=256
+  xlx=12.5663706144 
+  yly=2.
+  zlz=4.18879020479
+  nclx=2
+  ncly=2
+  nclz=0
+  nfiles=1
+  file1=1
+  filen=1
+  istret=2.
+  
 
   if (nclx==0) dx=xlx/nx
   if (nclx==1 .or. nclx==2) dx=xlx/(nx-1.)
@@ -39,8 +43,8 @@ program visu_paraview
   do i=1,nx
      y1(i)=(i-1)*dx
   enddo
-  if (istret==1) then
-     print *,'We need to read the yp.dat file'
+if (istret .ne. 0) then     
+print *,'We need to read the yp.dat file'
      open(12,file='yp.dat',form='formatted',status='unknown')
      do j=1,ny
         read(12,*) yp(j)
@@ -57,7 +61,7 @@ program visu_paraview
 
 
   nfil=41
-  open(nfil,file='visu.xdmf')
+  open(nfil,file='visu1.xdmf')
 
   write(nfil,'(A22)')'<?xml version="1.0" ?>'
   write(nfil,*)'<!DOCTYPE Xdmf SYSTEM "Xdmf.dtd" []>'
@@ -124,6 +128,22 @@ program visu_paraview
     write(nfil,*)'                DataType="Float" Precision="8" Endian="little"'
     write(nfil,*)'                Dimensions="',nz,ny,nx,'">'
     write(nfil,*)'                  uy'//chits
+    write(nfil,*)'               </DataItem>'
+    write(nfil,*)'            </Attribute>'
+
+    write(nfil,*)'            <Attribute Name="uz" Center="Node">'
+    write(nfil,*)'               <DataItem Format="Binary" '
+    write(nfil,*)'                DataType="Float" Precision="8" Endian="little"'
+    write(nfil,*)'                Dimensions="',nz,ny,nx,'">'
+    write(nfil,*)'                  uz'//chits
+    write(nfil,*)'               </DataItem>'
+    write(nfil,*)'            </Attribute>'
+
+    write(nfil,*)'            <Attribute Name="lam" Center="Node">'
+    write(nfil,*)'               <DataItem Format="Binary" '
+    write(nfil,*)'                DataType="Float" Precision="8" Endian="little"'
+    write(nfil,*)'                Dimensions="',nz,ny,nx,'">'
+    write(nfil,*)'                  lam'//chits
     write(nfil,*)'               </DataItem>'
     write(nfil,*)'            </Attribute>'
 

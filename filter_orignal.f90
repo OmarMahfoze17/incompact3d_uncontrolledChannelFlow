@@ -33,45 +33,27 @@ fidix=0.5*(1. - 2.*af)/32.       ! d/2
 ! Explicit third-order filters near the boundaries!
 !Boundary point 1
 af1=0.
-fia1x=1.       	!7./8.+af/8.               ! a1/2
-fib1x=0. 			!3./8.+5.*af/8.            ! b1/2
-fic1x=0. 			!-3./8.+3./8.*af           ! c1/2
-fid1x=0. 			!1./8.-1./8.*af            ! d1/2
+fia1x=7./8.+af/8.               ! a1/2
+fib1x=3./8.+5.*af/8.            ! b1/2
+fic1x=-3./8.+3./8.*af           ! c1/2
+fid1x=1./8.-1./8.*af            ! d1/2
 !Boundary point 2
 fia2x=1./8.+3./4.*af    ! a2
 fib2x=5./8.+3./4.*af    ! b2/2
 fic2x=3./8.+af/4.    ! c2/2
 fid2x=-1./8.+af/4.   ! d2/2
-
-!Boundary point 3
-fia3x=-1./32.+1./16.*af    ! a2
-fib3x=5./32.+11./16.*af    ! b2/2
-fic3x=11./16.+5./8.*af    ! c2/2
-fid3x=5./16.+3./8.*af   ! d2/2
-fie3x=-5./32.+5./16.*af   ! d2/2
-fif3x=1./32.-1./16.*af   ! d2/2
 !Boundary point n
 afn=0.
-fianx=1.        !7./8.+af/8.               ! a1/2
-fibnx=0.        !3./8.+5.*af/8.            ! b1/2
-ficnx=0.        !-3./8.+3./8.*af           ! c1/2
-fidnx=0.        !1./8.-1./8.*af            ! d1/2
+fianx=7./8.+af/8.               ! a1/2
+fibnx=3./8.+5.*af/8.            ! b1/2
+ficnx=-3./8.+3./8.*af           ! c1/2
+fidnx=1./8.-1./8.*af            ! d1/2
 !Boundary point m=n-1
 fiamx=1./8.+3./4.*af    ! a2
 fibmx=5./8.+3./4.*af    ! b2/2
 ficmx=3./8.+af/4.    ! c2/2
 fidmx=-1./8.+af/4.   ! d2/2
-!Boundary point p=n-2 (Fifth order)
-
-fiapx=-1./32.+af/16.          ! ap
-fibpx= 5./32.+11./16.*af  ! bp
-ficpx= 11/16.+5.*af/8.      ! cp
-fidpx= 5./16.+3.*af/8.       ! dp
-fiepx=-5./32.+5.*af/16.    ! ep
-fifpx= 1./32.-af/16.          ! fp
 ! Set the coefficients for the matrix A
-
-
 ! Periodic case
 if (nclx.eq.0) then
    fiffx(1)   =af
@@ -165,14 +147,6 @@ fia2y=1./8.+3./4.*af    ! a2
 fib2y=5./8.+3./4.*af    ! b2/2
 fic2y=3./8.+af/4.    ! c2/2
 fid2y=-1./8.+af/4.   ! d2/2
-!Boundary point 3
-fia3y=-1./32.+1./16.*af    ! a2
-fib3y=5./32.+11./16.*af    ! b2/2
-fic3y=11./16.+5./8.*af    ! c2/2
-fid3y=5./16.+3./8.*af   ! d2/2
-fie3y=-5./32.+5./16.*af   ! d2/2
-fif3y=1./32.-1./16.*af   ! d2/2
-
 !Boundary point n
 fiany=7./8.+af/8.               ! a1/2
 fibny=3./8.+5.*af/8.            ! b1/2
@@ -183,13 +157,6 @@ fiamy=1./8.+3./4.*af    ! a2
 fibmy=5./8.+3./4.*af    ! b2/2
 ficmy=3./8.+af/4.    ! c2/2
 fidmy=-1./8.+af/4.   ! d2/2
-!Boundary point p=n-2
-fiapy=-1./32.+af/16.          ! ap
-fibpy= 5./32.+11./16.*af  ! bp
-ficpy= 11/16.+5.*af/8.      ! cp
-fidpy= 5./16.+3.*af/8.       ! dp
-fiepy=-5./32.+5.*af/16.    ! ep
-fifpy= 1./32.-af/16.          ! fp
 ! Define coefficients
 if (ncly.eq.0) then
    fiffy(1)   =af
@@ -214,7 +181,7 @@ if (ncly.eq.0) then
    enddo   
 endif
 if (ncly.eq.1) then
-   fiffy(1)   =af+af
+   fiffy(1)   =af1
    fiffy(2)   =af
    fiffy(ny-2)=af
    fiffy(ny-1)=af
@@ -227,7 +194,7 @@ if (ncly.eq.1) then
    fifby(1)   =af 
    fifby(2)   =af
    fifby(ny-2)=af
-   fifby(ny-1)=af+af
+   fifby(ny-1)=afn
    fifby(ny  )=0.
    do j=3,ny-3
       fiffy(j)=af
@@ -360,8 +327,8 @@ return
 end subroutine filter
 
 
-subroutine filx(tx   ,ux  ,fiffx ,fifsx ,fifwx ,nx    ,ny   ,nz   ,npaire) 
-
+subroutine filx(tx,ux,fiffx,fifsx,fifwx,nx,ny,nz,npaire) 
+  
 USE param, only: nclx, ncly, nclz  
 USE parfiX 
 
@@ -432,9 +399,7 @@ if (nclx==2) then
       tx_temp(1,j,k)=ux(1,j,k)
       tx_temp(2,j,k)=fia2x*ux(1,j,k)+fib2x*ux(2,j,k)+fic2x*ux(3,j,k)+&
                 fid2x*ux(4,j,k)
-      tx_temp(3,j,k)=fia3x*ux(1,j,k)+fib3x*ux(2,j,k)+fic3x*ux(3,j,k)+&
-                fid3x*ux(4,j,k)+fie3x*ux(5,j,k)+fif3x*ux(6,j,k)
-      do i=4,nx-3
+      do i=3,nx-2
          tx_temp(i,j,k)=fiaix*ux(i,j,k)+fibix*(ux(i+1,j,k)+ux(i-1,j,k))& 
                                   +ficix*(ux(i+2,j,k)+ux(i-2,j,k))&
                                   +fidix*(ux(i+3,j,k)+ux(i-3,j,k)) 
@@ -442,8 +407,6 @@ if (nclx==2) then
       tx_temp(nx,j,k)=ux(nx,j,k)
       tx_temp(nx-1,j,k)=fiamx*ux(nx,j,k)+fibmx*ux(nx-1,j,k)+ficmx*ux(nx-2,j,k)+&
                             fidmx*ux(nx-3,j,k)
-      tx_temp(nx-2,j,k)=fiapx*ux(nx,j,k)+fibpx*ux(nx-1,j,k)+ficpx*ux(nx-2,j,k)+&
-                fidpx*ux(nx-3,j,k)+fiepx*ux(nx-4,j,k)+fifpx*ux(nx-5,j,k)                           
       do i=2,nx 
          tx_temp(i,j,k)=tx_temp(i,j,k)-tx_temp(i-1,j,k)*fifsx(i) 
       enddo
@@ -643,9 +606,7 @@ if (ncly==2) then
       ty_temp(i,1,k)=uy(i,1,k)
       ty_temp(i,2,k)=fia2y*uy(i,1,k)+fib2y*uy(i,2,k)+fic2y*uy(i,3,k)+&
                 fid2y*uy(i,4,k)
-      ty_temp(i,3,k)=fia3y*uy(i,1,k)+fib3y*uy(i,2,k)+fic3y*uy(i,3,k)+&
-                fid3y*uy(i,4,k)+fie3y*uy(i,5,k)+fif3y*uy(i,6,k)
-      do j=4,ny-3
+      do j=3,ny-2
          ty_temp(i,j,k)=fiajy*uy(i,j,k)+fibjy*(uy(i,j+1,k)+uy(i,j-1,k))& 
                                   +ficjy*(uy(i,j+2,k)+uy(i,j-2,k))&
                                   +fidjy*(uy(i,j+3,k)+uy(i,j-3,k)) 
@@ -653,8 +614,6 @@ if (ncly==2) then
       ty_temp(i,ny,k)=uy(i,ny,k)
       ty_temp(i,ny-1,k)=fiamy*uy(i,ny,k)+fibmy*uy(i,ny-1,k)+ficmy*uy(i,ny-2,k)+&
                                     fidmy*uy(i,ny-3,k)
-      ty_temp(i,ny-2,k)=fiapy*uy(i,ny  ,k)+fibpy*uy(i,ny-1,k)+ficpy*uy(i,ny-2,k)+&
-                        fidpy*uy(i,ny-3,k)+fiepy*uy(i,ny-4,k)+fifpy*uy(i,ny-5,k)                                    
       do j=2,ny 
          ty_temp(i,j,k)=ty_temp(i,j,k)-ty_temp(i,j-1,k)*fifsy(j) 
       enddo
@@ -778,7 +737,7 @@ return
 end subroutine filz
 !############################################################################
 !
-subroutine filter3D (ux1_f,ux1) ! OMAR
+subroutine filter3D (ux1,ux1_filter) ! OMAR
 !
 !############################################################################
 
@@ -788,25 +747,25 @@ USE decomp_2d
 
 implicit none
 
-real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,ux1_f
-real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: ux2_f,ta2
-real(mytype),dimension(zsize(1),zsize(2),zsize(3)) :: ux3_f,ta3
+real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,ux1_filter,ux1_filter_temp
+real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: ux2_filter
+real(mytype),dimension(zsize(1),zsize(2),zsize(3)) :: ux3_filter
 
 
 
-call filx(ux1_f,ux1,fiffx,fifsx,fifwx,xsize(1),xsize(2),xsize(3),0)
+call filx(ux1_filter_temp,ux1,fiffx,fifsx,fifwx,xsize(1),xsize(2),xsize(3),1)
 
-call transpose_x_to_y(ux1_f,ta2)
+call transpose_x_to_y(ux1_filter_temp,ux2_filter)
 
-call fily(ux2_f,ta2,fiffy,fifsy,fifwy,ppy,ysize(1),ysize(2),ysize(3),1)
-ta2=0.
-call transpose_y_to_z(ux2_f,ta3)
+!call fily(ux2_filter,ux2_filter,fiffy,fifsy,fifwy,ppy,ysize(1),ysize(2),ysize(3),1)
 
-call filz(ux3_f,ta3,fiffz,fifsz,fifwz,zsize(1),zsize(2),zsize(3),1)
-ta3=0.; ux2_f=0.
-call transpose_z_to_y(ux3_f,ux2_f)
-ux3_f=0.
-call transpose_y_to_x(ux2_f,ux1_f)
+call transpose_y_to_z(ux2_filter,ux3_filter)
+
+call filz(ux3_filter,ux3_filter,fiffz,fifsz,fifwz,zsize(1),zsize(2),zsize(3),1)
+
+call transpose_z_to_y(ux3_filter,ux2_filter)
+
+call transpose_y_to_x(ux2_filter,ux1_filter)
 
 !ux1_filter=ux1_filter_temp   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXxx
 
