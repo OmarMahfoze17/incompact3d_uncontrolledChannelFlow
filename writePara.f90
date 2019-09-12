@@ -45,6 +45,7 @@ nfil=41
   write(nfil,10) 1,'           #ilit     # Read initial flow field ?'
   write(nfil,10) isave,'        #isave    # Frequency for writing backup file  '
   write(nfil,10) imodulo,'       #imodulo  # Frequency for visualization for VISU_INSTA'
+  write(nfil,20) tStartSTAT,'        #tStartSTAT # collect Statistics after itime*dt passes this value'
   write(nfil,*) '#'
   write(nfil,*) '#             INCOMPACT 3D File parameters '
   write(nfil,*) '#'
@@ -56,8 +57,6 @@ nfil=41
   write(nfil,*) '#'
  
   close(nfil)
-  do i=1,1
   call system('nohup vim -c %s/\ // -c %s/\ // -c %s/\ // -c %s/\ // -c %s/\ // -c %s/\ // -c %s/\ // -c wq! ./incompact3d.prm &')
-  enddo
-
+  call sleep(5)
 end subroutine writePara 

@@ -122,7 +122,7 @@ call decomp_info_init(nxm, ny, nz, ph2)
 call decomp_info_init(nxm, nym, nz, ph3) 
 tstart=0.;t1=0.;trank=0.;tranksum=0.;ttotal=0.
 tstart=MPI_WTIME()
-call filter(0.28_mytype)
+!call filter(0.28_mytype)
 do itime=ifirst,ilast
    t=(itime-1)*dt
    t1=MPI_WTIME()
@@ -192,7 +192,7 @@ do itime=ifirst,ilast
       call MPI_REDUCE(maxval(ux1),ux_max,1,real_type,MPI_MAX,0,MPI_COMM_WORLD,code)
       if (nrank==0) then
       if (ux_max >= 100 .or. isnan(sum(ux1))) then
-      call writePara(1,0,1,(itime/isave)*isave,0.9*dt)
+      call writePara(1,0,1,(itime/isave)*isave,0.95*dt)
       print *, 'NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN'
       stop  'NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN'
       goto 100
@@ -202,9 +202,12 @@ do itime=ifirst,ilast
 
    enddo
 
-   if (itime*dt .gt. 180) then
+   if (itime*dt .gt. tStartSTAT) then
         call STATISTIC(ux1,uy1,uz1,phi1,ta1,umean,vmean,wmean,phimean,uumean,vvmean,wwmean,&
-            uvmean,uwmean,vwmean,phiphimean,tmean)
+            uvmean,uwmean,vwmean,phiphimean,tmean,0)
+        if (mod(itime,isave)==0) then
+            if (nrank==0)  CALL system('./backUp')
+        endif
    endif
    if (mod(itime,isave)==0) then 
       call restart(ux1,uy1,uz1,ep1,pp3,phi1,gx1,gy1,gz1,&
@@ -235,9 +238,10 @@ do itime=ifirst,ilast
      if (telapsed*3600 > (myWallTime-600)) then
         call restart(ux1,uy1,uz1,ep1,pp3,phi1,gx1,gy1,gz1,&
         px1,py1,pz1,phis1,hx1,hy1,hz1,phiss1,phG,1)        
-        if (itime*dt .gt. 180) then
+        if (itime*dt .gt. tStartSTAT) then
         call STATISTIC(ux1,uy1,uz1,phi1,ta1,umean,vmean,wmean,phimean,uumean,vvmean,wwmean,&
-            uvmean,uwmean,vwmean,phiphimean,tmean)
+            uvmean,uwmean,vwmean,phiphimean,tmean,1)
+        if (nrank==0)   CALL system('./backUp')
         endif
         if (nrank==0) call writePara(1,0,0,itime,dt)
         goto 100

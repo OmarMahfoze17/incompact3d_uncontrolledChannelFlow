@@ -1,0 +1,34 @@
+#!/bin/bash
+#PBS -N Chl_SV33_CrsW128
+#PBS -l nodes=11:ppn=24
+#PBS -l walltime=4:00:00
+#PBS -j oe
+#PBS -m bea
+#PBS -M omar.mafoze.hpc@gmail.com
+cd $PBS_O_WORKDIR
+export NPROC=`qstat -f $PBS_JOBID | grep mppwidth | awk '{print $3}'`
+date
+echo $PBS_WALLTIME > whatIsMyWallTime 
+###########################################################
+if [ -d "meanValTemp" ]; then
+    i=0
+    while :
+    do
+        i=$(($i+1))
+        if [ -d "meanVal_$i" ]; then
+           echo "meanVal_$i exists"
+        else
+            echo -e "\e[1;31m ./meanValTemp ===> meanVal_$i\e[0m" >> move_meanValTemp_LOG &
+	    mv ./meanValTemp ./meanVal_$i 
+	break
+	    fi
+    done
+else
+    echo -e "\e[1;31m meanValTemp does not exist\e[0m" >> move_meanValTemp_LOG &
+fi
+###########################################################
+#make clean
+make
+
+aprun -n 256 -N 24  ./incompact3d > INCOMPACT3D_log
+qsub run

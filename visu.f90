@@ -155,7 +155,7 @@ end subroutine VISU_INSTA
 !############################################################################
 !
 subroutine STATISTIC(ux1,uy1,uz1,phi1,ta1,umean,vmean,wmean,phimean,uumean,vvmean,wwmean,&  
-            uvmean,uwmean,vwmean,phiphimean,tmean) ! OMAR
+            uvmean,uwmean,vwmean,phiphimean,tmean,iWrite) ! OMAR
 !############################################################################
 
 USE param
@@ -164,17 +164,13 @@ USE decomp_2d
 USE decomp_2d_io
 
 implicit none
-integer :: nxmsize,nymsize,nzmsize   ! OMAR
+integer :: nxmsize,nymsize,nzmsize,iWrite   ! OMAR
 TYPE(DECOMP_INFO) :: phG,ph2,ph3 ! OMAR
 
 real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,phi1
 real(mytype),dimension(xszS(1),xszS(2),xszS(3)) :: umean,vmean,wmean,uumean,vvmean,wwmean,uvmean,uwmean,vwmean,tmean
 real(mytype),dimension(xszS(1),xszS(2),xszS(3)) :: phimean, phiphimean
 real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ta1
-
-
-
-
 
 !umean=ux1
 call fine_to_coarseS(1,ux1,tmean)
@@ -235,7 +231,7 @@ endif
 !call decomp_2d_write_one(nx_global,ny_global,nz_global,&
 !           1,ta1,'compa.dat')
 
-if (mod(itime,isave)==0) then
+if (mod(itime,isave)==0 .or. iWrite==1) then
    call decomp_2d_write_one(1,umean,'umean.dat',1)
    call decomp_2d_write_one(1,vmean,'vmean.dat',1)
    call decomp_2d_write_one(1,wmean,'wmean.dat',1)

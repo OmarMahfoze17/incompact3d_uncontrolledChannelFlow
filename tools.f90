@@ -189,7 +189,7 @@ if (iscalar==0) then
          call MPI_FILE_CLOSE(fh,ierror)
       else
 
-         if (nrank==0) print *,'RESTART 111111111111111111111111'
+         if (nrank==0) print *,'RESTART '
          call MPI_FILE_OPEN(MPI_COMM_WORLD, 'sauve.dat', &
               MPI_MODE_RDONLY, MPI_INFO_NULL, &
               fh, ierror)
@@ -229,7 +229,7 @@ if (iscalar==0) then
          call decomp_2d_write_var(fh,disp,1,pp3,phG)
          call MPI_FILE_CLOSE(fh,ierror)
       else
-         if (nrank==0) print *,'RESTART222222222222222222'
+         if (nrank==0) print *,'RESTART'
          call MPI_FILE_OPEN(MPI_COMM_WORLD, 'sauve.dat', &
               MPI_MODE_RDONLY, MPI_INFO_NULL, &
               fh, ierror)
@@ -273,7 +273,7 @@ if (nscheme.ne.4) then
          call decomp_2d_write_var(fh,disp,1,phis1)
          call MPI_FILE_CLOSE(fh,ierror)
       else
-         if (nrank==0) print *,'RESTART3333333333333333333333333'
+         if (nrank==0) print *,'RESTART'
          call MPI_FILE_OPEN(MPI_COMM_WORLD, 'sauve.dat', &
               MPI_MODE_RDONLY, MPI_INFO_NULL, &
               fh, ierror)
@@ -318,7 +318,7 @@ if (nscheme.ne.4) then
          call decomp_2d_write_var(fh,disp,1,phiss1)
          call MPI_FILE_CLOSE(fh,ierror)
       else
-         if (nrank==0) print *,'RESTART44444444444444444444444'
+         if (nrank==0) print *,'RESTART'
          call MPI_FILE_OPEN(MPI_COMM_WORLD, 'sauve.dat', &
               MPI_MODE_RDONLY, MPI_INFO_NULL, &
               fh, ierror)

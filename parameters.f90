@@ -92,6 +92,7 @@ read (10,1000) a
 read (10,*) ilit 
 read (10,*) isave
 read (10,*) imodulo
+read (10,*) tStartSTAT
 read (10,1000) a 
 read (10,1000) a 
 read (10,1000) a 

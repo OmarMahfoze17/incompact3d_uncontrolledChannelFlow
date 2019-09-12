@@ -99,7 +99,7 @@ csttx = 0.
 !bsix  = (3./44. )/dx2
 !csix  = 0.
 !NUMERICAL DISSIPATION (see publications for help)
-xxnu=1./3.
+xxnu=1./33.
 dpis3=2*pi/3
 kppkc=pi*pi/xxnu+pi*pi
 kppkm=dpis3*dpis3*exp(-((pi-dpis3)/(0.3*pi-dpis3))**2)/xxnu+dpis3*dpis3

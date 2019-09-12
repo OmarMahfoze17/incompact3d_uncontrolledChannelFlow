@@ -1,0 +1,12 @@
+#!/bin/bash
+
+mv ./meanValTemp ./meanValTemp_backup
+mkdir meanValTemp
+mv ./*mean.dat ./meanValTemp/
+#rm ./meanVel.h5
+#mv umean0.dat ./meanValTemp
+cp ./INCOMPACT3D_log ./meanValTemp/
+cp yp.dat ./meanValTemp/
+#cp ./OUT* ./meanValTemp/
+#cp ./shearVel.h5 ./meanValTemp/
+rm -rf ./meanValTemp_backup
